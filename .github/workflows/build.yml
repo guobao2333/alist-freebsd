@@ -3,8 +3,9 @@ name: Build AList CI
 on: workflow_dispatch
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
+
     name: Build Alist
     steps:
     - uses: actions/checkout@v4
