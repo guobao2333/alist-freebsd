@@ -36,4 +36,3 @@ jobs:
               workflow_id: 'build.yml',
               ref: 'main'
             })
-
