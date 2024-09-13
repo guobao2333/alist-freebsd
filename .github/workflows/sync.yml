@@ -15,7 +15,8 @@ jobs:
           export REMOTEVERSION=$(curl -s https://api.github.com/repos/alist-org/alist/releases/latest | jq -r '.tag_name')
           export LOCALVERSION=$(curl -s --location --fail --show-error "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.tag_name')
           echo "☁️Remote Version: $REMOTEVERSION | 📥Local Version: $LOCALVERSION"
-        SYNCED: ${{( $LOCALVERSION == $REMOTEVERSION ) ? 'true' : 'false' }}
+        env:
+          SYNCED: ${{( $LOCALVERSION == $REMOTEVERSION ) ? 'true' : 'false' }}
 
       - name: Build latest version
         if: ${{ env.SYNCED }}
