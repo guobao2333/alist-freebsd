@@ -8,27 +8,31 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
       - name: Compare versions
+        id: compare_versions
         run: |
           export REMOTEVERSION=$(curl -s https://api.github.com/repos/alist-org/alist/releases/latest | jq -r '.tag_name')
           export LOCALVERSION=$(curl -s --location --fail --show-error "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.tag_name')
           echo "☁️Remote Version: $REMOTEVERSION | 📥Local Version: $LOCALVERSION"
+          echo "SYNCED=$([[ "$LOCALVERSION" == "$REMOTEVERSION" ]] && echo 'true' || echo 'false')" >> $GITHUB_ENV
         env:
-          SYNCED: ${{( $LOCALVERSION == $REMOTEVERSION ) ? 'true' : 'false' }}
+          SYNCED: ${{ steps.compare_versions.outputs.SYNCED }}
 
       - name: Build latest version
-        if: ${{ env.SYNCED }}
-          run: echo "No need to build, it's already the latest version"
-        else:
-          run: echo "Preparing to build..."
-          uses: actions/github-script@v7
-          with:
-            script: |
-              await github.rest.actions.createWorkflowDispatch({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                workflow_id: 'build.yml',
-                ref: 'main'
-              })
+        if: ${{ env.SYNCED != 'true' }}
+        run: echo "Preparing to build..."
+
+      - name: Dispatch build workflow
+        if: ${{ env.SYNCED != 'true' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'build.yml',
+              ref: 'main'
+            })
