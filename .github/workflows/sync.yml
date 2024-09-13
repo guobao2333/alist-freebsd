@@ -15,15 +15,16 @@ jobs:
         id: compare_versions
         run: |
           export REMOTEVERSION=$(curl -s https://api.github.com/repos/alist-org/alist/releases/latest | jq -r '.tag_name')
-          export LOCALVERSION=$(curl -s --location --fail --show-error "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.tag_name')
+          export LOCALVERSION=$(curl -s --location --fail --show-error "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.tag_name') || export LOCALVERSION="nothing"
           echo "☁️Remote Version: $REMOTEVERSION | 📥Local Version: $LOCALVERSION"
           echo "SYNCED=$([[ "$LOCALVERSION" == "$REMOTEVERSION" ]] && echo 'true' || echo 'false')" >> $GITHUB_ENV
         env:
           SYNCED: ${{ steps.compare_versions.outputs.SYNCED }}
+        if: ${{ env.SYNCED }}
+        run: echo "Preparing to build..."
 
       - name: Dispatch build workflow
         if: ${{ env.SYNCED }}
-        run: echo "Preparing to build..."
         uses: actions/github-script@v7
         with:
           script: |
@@ -33,3 +34,5 @@ jobs:
               workflow_id: 'build.yml',
               ref: 'main'
             })
+        else:
+        run: echo "Already the latest version, no need to build"
