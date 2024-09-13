@@ -1,8 +1,8 @@
-name: Run Tests
+name: Check and Sync
 
 on:
   schedule:
-    - cron: '0 16 */1 * *'
+    - cron: '0 16 */1 * *' # Runs daily at 4PM
   workflow_dispatch:
 
 jobs:
@@ -10,30 +10,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: compare versions
+      - name: Compare versions
         run: |
-          export REMOTEVERSION=$(wget -qO- https://api.github.com/repos/alist-org/alist/tags | gawk -F '["v]' '/name/{print "v"$5;exit}')
-          export LOCALVERSION=$(curl --location --silent --fail --show-error "https://api.github.com/repos/applexad/alist-freebsd/releases/latest" | grep -oP '"tag_name":\s*"\K[^"]+')
-          bash compare.sh
-          
-      - name: Trigger release
-        if: ${{ env.SYNCED == 0 }}
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.PAT_TOKEN }}
-          script: |
+          export REMOTEVERSION=$(curl -s https://api.github.com/repos/alist-org/alist/releases/latest | jq -r '.tag_name')
+          export LOCALVERSION=$(curl -s --location --fail --show-error "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.tag_name')
+          echo "☁️Remote Version: $REMOTEVERSION | 📥Local Version: $LOCALVERSION"
+        SYNCED: ${{( $LOCALVERSION == $REMOTEVERSION ) ? 'true' : 'false' }}
+
+      - name: Build latest version
+        if: ${{ env.SYNCED }}
+          run: echo "No need to build, it's already the latest version"
+        else:
+          run: echo "Preparing to build..."
+          uses: actions/github-script@v7
+          with:
+            script: |
               await github.rest.actions.createWorkflowDispatch({
-              owner: 'applexad',
-              repo: 'alist-freebsd',
-              workflow_id: 'build.yml',
-              ref: 'main'
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'build.yml',
+                ref: 'main'
               })
-              
-      - name: Delete workflow runs
-        if: ${{ env.SYNCED == 1 }}
-        uses: Mattraks/delete-workflow-runs@v2
-        with:
-          token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          retain_days: 1
-          keep_minimum_runs: 8

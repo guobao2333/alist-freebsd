@@ -1,4 +1,4 @@
-name: Build Alist
+name: Build AList CI
 
 on: workflow_dispatch
 
@@ -22,7 +22,7 @@ jobs:
           cd alist/public && wget https://github.com/alist-org/alist-web/releases/latest/download/dist.tar.gz && tar xzf dist.tar.gz && rm dist.tar.gz
           cd ..
           bash ../build.sh
-          
+
     - name: Upload artifact
       uses: actions/upload-artifact@main
       with:
@@ -35,14 +35,14 @@ jobs:
       run: echo "release_tag=$(wget -qO- https://api.github.com/repos/alist-org/alist/tags | gawk -F '["v]' '/name/{print "v"$5;exit}')" >> $GITHUB_OUTPUT
 
     - name: Create release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ steps.tag.outputs.release_tag }}
         files: |
               alist/alist
-              
+
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@v2
       with:
