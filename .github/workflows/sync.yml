@@ -22,6 +22,8 @@ jobs:
           SYNCED: ${{ steps.compare_versions.outputs.SYNCED }}
         if: ${{ env.SYNCED }}
         run: echo "Preparing to build..."
+        else:
+        run: echo "Already the latest version, no need to build"
 
       - name: Dispatch build workflow
         if: ${{ env.SYNCED }}
@@ -34,5 +36,4 @@ jobs:
               workflow_id: 'build.yml',
               ref: 'main'
             })
-        else:
-        run: echo "Already the latest version, no need to build"
+
