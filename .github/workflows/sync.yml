@@ -23,5 +23,5 @@ jobs:
             echo "No need to build, it's already the latest version"
           else
             echo "Preparing to build..."
-            gh workflow run build.yml -f ref=main
+            gh workflow run build.yml
           fi
