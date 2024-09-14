@@ -9,11 +9,27 @@ jobs:
     name: Build Alist
     steps:
     - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '^1.18.0'
+
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
     - name: Build Alist
       uses: vmactions/freebsd-vm@v1
       with:
         usesh: true
-        release: 13.2
+        release: 13.3
         prepare: |
           pkg install -y node wget curl git go122 gcc bash gawk gsed
           ln -s /usr/local/bin/go122 /usr/local/bin/go
