@@ -5,22 +5,21 @@ on:
     - cron: '0 16 */1 * *' # Runs daily at 4PM
   workflow_dispatch:
 
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   check:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-      - name: Compare versions
-        id: compare_versions
+      - name: Compare versions and dispatch build
         run: |
-          export REMOTEVERSION=$(curl -s https://api.github.com/repos/alist-org/alist/releases/latest | jq -r '.tag_name')
-          export LOCALVERSION=$(curl -s --location --fail --show-error "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.tag_name') || export LOCALVERSION="nothing"
+          REMOTEVERSION=$(curl -s https://api.github.com/repos/alist-org/alist/releases/latest | jq -r '.tag_name')
+          LOCALVERSION=$(curl -s --location --fail --show-error "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.tag_name') || export LOCALVERSION="nothing"
           echo "☁️Remote Version: $REMOTEVERSION | 📥Local Version: $LOCALVERSION"
-          echo "SYNCED=$([[ "$LOCALVERSION" == "$REMOTEVERSION" ]] && echo 'true' || echo 'false')" >> $GITHUB_ENV
-      - name: Check version and dispatch build
-        run: |
-          if [ "${{ env.SYNCED }}" == "true" ]; then
+          if [ "$LOCALVERSION" = "$REMOTEVERSION" ]; then
             echo "No need to build, it's already the latest version"
           else
             echo "Preparing to build..."
