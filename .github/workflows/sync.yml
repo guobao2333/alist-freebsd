@@ -20,7 +20,7 @@ jobs:
           echo "SYNCED=$([[ "$LOCALVERSION" == "$REMOTEVERSION" ]] && echo 'true' || echo 'false')" >> $GITHUB_ENV
       - name: Check version and dispatch build
         run: |
-          if [ "${{ env.SYNCED }}" ]; then
+          if [ ${{ env.SYNCED }} ]; then
             echo "No need to build, it's already the latest version"
           else
             echo "Preparing to build..."
