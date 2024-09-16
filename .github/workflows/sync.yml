@@ -2,7 +2,7 @@ name: Check and Sync
 
 on:
   schedule:
-    - cron: '0 16 */1 * *' # Runs daily at 4PM
+    - cron: '30 15 * * *' # Runs daily at 3:30PM
   workflow_dispatch:
 
 env:
